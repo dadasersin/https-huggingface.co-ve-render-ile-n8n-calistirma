@@ -8,11 +8,7 @@ Bu proje, n8n'i hem **Render** hem de **Hugging Face Spaces** üzerinde aynı **
 
 1. [Neon.tech](https://neon.tech/) üzerinden ücretsiz bir PostgreSQL projesi oluşturun.
 2. Sağ taraftaki **"Connection String"** panelinden host ve şifre bilgilerini alın.
-3. Proje klasöründeki `Dockerfile` dosyasını açın ve şu satırları Neon bilgilerinizle doldurun:
-   ```dockerfile
-   ENV DB_POSTGRESDB_HOST=ep-xxxx-xxxx.eu-central-1.aws.neon.tech
-   ENV DB_POSTGRESDB_PASSWORD=BURAYA_NEON_SIFRENIZI_YAZIN
-   ```
+3. Bu bilgileri platformlardaki **Environment Variables** (Ortam Değişkenleri) kısmına ekleyeceksiniz.
 
 ---
 
@@ -25,32 +21,46 @@ Bu proje, n8n'i hem **Render** hem de **Hugging Face Spaces** üzerinde aynı **
 1. Render paneline girin ve **"New Web Service"**'e tıklayın.
 2. GitHub repository'nizi bağlayın.
 3. **Instance Type** olarak en düşüğü seçebilirsiniz.
-4. **Environment Variables** (Ortam Değişkenleri) kısmına şunu ekleyin:
+4. **Environment Variables** kısmına şunları ekleyin:
+   - `DB_POSTGRESDB_HOST`: Neon host adresiniz
+   - `DB_POSTGRESDB_USER`: Neon kullanıcı adınız
+   - `DB_POSTGRESDB_PASSWORD`: Neon şifreniz
+   - `N8N_ENCRYPTION_KEY`: Güçlü ve rastgele bir anahtar (Verilerinizin güvenliği için kritiktir!)
    - `N8N_WEBHOOK_URL`: `https://[senin-app-adın].onrender.com/`
+   - `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED`: `false` (Neon SSL için gereklidir)
 
 ### 3. Hugging Face Spaces Kurulumu
 1. Hugging Face'de **"New Space"** oluşturun.
 2. SDK olarak **"Docker"**'ı seçin.
-3. Repository'nizi bağlayın (veya dosyaları yükleyin).
+3. Repository'nizi bağlayın.
 4. **Settings** -> **Variables and Secrets** kısmına gidin.
-5. **Variables** kısmına şunu ekleyin:
+5. **Secrets** kısmına Neon veritabanı bilgilerinizi ve `N8N_ENCRYPTION_KEY` anahtarınızı ekleyin.
+6. **Variables** kısmına şunu ekleyin:
    - `N8N_WEBHOOK_URL`: `https://[kullanıcı-adın]-[space-adın].hf.space/`
 
 ---
 
-## 💡 Önemli İpuçları & Kullanım Kılavuzu
+## 🔐 Güvenlik ve En İyi Uygulamalar
 
-### 🔄 Senkronizasyon Nasıl Çalışır?
-Her iki platform da Neon veritabanına bağlıdır. Hugging Face üzerinde bir otomasyon kaydederseniz, Render adresinizi yenilediğinizde aynı otomasyonu orada da göreceksiniz.
+- **Secret Kullanımı:** Hassas bilgileri (`PASSWORD`, `HOST`, `ENCRYPTION_KEY`) asla `Dockerfile` içine yazmayın. Her zaman platformun kendi Gizli Değişkenler (Secret) özelliğini kullanın.
+- **N8N_ENCRYPTION_KEY:** Bu anahtarı bir kez belirleyin ve her iki platformda da aynısını kullanın. Eğer bu anahtarı kaybederseniz, veritabanındaki şifrelenmiş veriler (kimlik bilgileri vb.) okunamaz hale gelir.
+- **Kullanıcı Yönetimi:** Bu kurulumda `N8N_USER_MANAGEMENT_DISABLED=true` ayarlanmıştır. Daha fazla güvenlik için bunu `false` yapıp n8n içinde bir admin hesabı oluşturabilirsiniz.
 
-### 🔌 Webhook Tetikleyicileri
-n8n'de webhook kullanırken, kullandığınız platformun (Render veya HF) URL'sinin `N8N_WEBHOOK_URL` ile eşleştiğinden emin olun. Platforma özel tetiklemeler için bu URL değişkendir.
+---
 
-### ⚠️ Fabrika Ayarları (Factory Reboot)
-Eğer platformlardan birine girince eski halini görüyorsanız veya bağlantı hatası alıyorsanız, o platformun panelinden **"Restart"** veya **"Factory Reboot"** yapmanız yeterlidir.
+## 🛠️ Sorun Giderme (Troubleshooting)
 
-### 🔒 Güvenlik
-`Dockerfile` içinde şifrelerinizi barındırmak istemiyorsanız, bu değerleri platformların kendi panelindeki "Secret" veya "Env" kısımlarından da tanımlayabilirsiniz; ancak Dockerfile yöntemi en hızlı test yöntemidir.
+### ❌ Neon.tech Bağlantı Sorunları (statement_timeout Hatası)
+- Neon "Pooled" bağlantı kullanıyorsanız `unsupported startup parameter in options: statement_timeout` hatası alabilirsiniz.
+- **Çözüm:** Render/HF panelinde `DB_POSTGRESDB_CONNECTION_PARAMETERS` değişkenini boş bırakın veya Neon panelindeki "Connection String" kısmından "Pooled" seçeneğini **kapatıp** "Direct" bağlantı bilgilerini kullanın.
+- Ayrıca `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false` ayarının yapıldığından emin olun.
+
+### 🐢 Donma veya Yavaşlama (Bellek Sorunu)
+- Ücretsiz planlarda bellek yetersiz kalabilir. `Dockerfile` içinde `EXECUTIONS_PROCESS=main` ayarının aktif olduğundan emin olun (bu kurulumda aktiftir).
+- Eğer hala sorun yaşıyorsanız, `NODE_OPTIONS=--max-old-space-size=512` değişkenini ekleyerek n8n'in bellek kullanımını limitleyebilirsiniz.
+
+### 🔄 Senkronizasyon Çalışmıyor
+- Her iki platformun da **aynı** Neon veritabanına ve **aynı** `N8N_ENCRYPTION_KEY` anahtarına sahip olduğundan emin olun.
 
 ---
 

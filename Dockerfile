@@ -10,20 +10,27 @@ RUN npm install -g n8n
 ENV N8N_PORT=7860
 EXPOSE 7860
 
-# --- VERİTABANI BAĞLANTISI (Neon.tech Bilgileri) ---
-# Neon konsolundaki bilgilerle bu kısımları doldurun
+# --- VERİTABANI BAĞLANTISI ---
+# Not: Güvenlik için bu değerleri Render/HF panellerinden "Environment Variables" olarak tanımlayın.
+# Dockerfile içinde şifre saklamak risklidir.
 ENV DB_TYPE=postgresdb
-ENV DB_POSTGRESDB_HOST=ep-xxxx-xxxx.eu-central-1.aws.neon.tech
 ENV DB_POSTGRESDB_PORT=5432
 ENV DB_POSTGRESDB_DATABASE=neondb
-ENV DB_POSTGRESDB_USER=neondb_owner
-ENV DB_POSTGRESDB_PASSWORD=BURAYA_NEON_SIFRENIZI_YAZIN
 
-# --- KRİTİK AYARLAR ---
+# --- KRİTİK & PERFORMANS AYARLARI ---
 ENV N8N_USER_MANAGEMENT_DISABLED=true
 ENV N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
 ENV N8N_COOKIES_SAME_SITE=lax
 ENV N8N_CORS_ALLOWED_ORIGINS=*
+
+# Şifreleme Anahtarı (Kurulumdan sonra panelden ayarlanması şiddetle önerilir)
+# ENV N8N_ENCRYPTION_KEY=SizinGüçlüAnahtarınız
+
+# Bellek tasarrufu için (Özellikle Free Tier platformlarda önerilir)
+ENV EXECUTIONS_PROCESS=main
+
+# Node.js bellek limiti (Opsiyonel: Kaynak yetersizse artırılabilir)
+# ENV NODE_OPTIONS=--max-old-space-size=512
 
 WORKDIR /home/node
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
