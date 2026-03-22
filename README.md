@@ -27,6 +27,7 @@ Bu proje, n8n'i hem **Render** hem de **Hugging Face Spaces** üzerinde aynı **
    - `DB_POSTGRESDB_PASSWORD`: Neon şifreniz
    - `N8N_ENCRYPTION_KEY`: Güçlü ve rastgele bir anahtar (Verilerinizin güvenliği için kritiktir!)
    - `N8N_WEBHOOK_URL`: `https://[senin-app-adın].onrender.com/`
+   - `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED`: `false` (Neon SSL için gereklidir)
 
 ### 3. Hugging Face Spaces Kurulumu
 1. Hugging Face'de **"New Space"** oluşturun.
@@ -49,9 +50,10 @@ Bu proje, n8n'i hem **Render** hem de **Hugging Face Spaces** üzerinde aynı **
 
 ## 🛠️ Sorun Giderme (Troubleshooting)
 
-### ❌ Veritabanı Bağlantı Hatası
-- Neon.tech "Project Settings" kısmında "IP Allowlist" ayarının kapalı veya `0.0.0.0/0` olduğundan emin olun.
-- Host ve şifre bilgilerinin doğru girildiğini kontrol edin.
+### ❌ Neon.tech Bağlantı Sorunları (statement_timeout Hatası)
+- Neon "Pooled" bağlantı kullanıyorsanız `unsupported startup parameter in options: statement_timeout` hatası alabilirsiniz.
+- **Çözüm:** Render/HF panelinde `DB_POSTGRESDB_CONNECTION_PARAMETERS` değişkenini boş bırakın veya Neon panelindeki "Connection String" kısmından "Pooled" seçeneğini **kapatıp** "Direct" bağlantı bilgilerini kullanın.
+- Ayrıca `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false` ayarının yapıldığından emin olun.
 
 ### 🐢 Donma veya Yavaşlama (Bellek Sorunu)
 - Ücretsiz planlarda bellek yetersiz kalabilir. `Dockerfile` içinde `EXECUTIONS_PROCESS=main` ayarının aktif olduğundan emin olun (bu kurulumda aktiftir).
